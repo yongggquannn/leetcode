@@ -6,5 +6,6 @@ This repository contains solutions to various LeetCode problems implemented in P
 
 - **#505** - The Maze II
 - **#1101** - The Earliest Moment When Everyone Become Friends
+- **#904** - Fruit Into Baskets
 
 Each solution file is named with the problem number and title for easy identification.
