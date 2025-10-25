@@ -4,8 +4,10 @@ This repository contains solutions to various LeetCode problems implemented in P
 
 ## Problems Solved
 
+- **#179** - Largest Number
+- **#261** - Graph Valid Tree
 - **#505** - The Maze II
-- **#1101** - The Earliest Moment When Everyone Become Friends
 - **#904** - Fruit Into Baskets
+- **#1101** - The Earliest Moment When Everyone Become Friends
 
 Each solution file is named with the problem number and title for easy identification.
