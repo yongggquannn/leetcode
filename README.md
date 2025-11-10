@@ -6,6 +6,7 @@ This repository contains solutions to various LeetCode problems implemented in P
 
 - **#179** - Largest Number
 - **#261** - Graph Valid Tree
+- **#325** - Maximum Size Subarray Sum Equals k
 - **#505** - The Maze II
 - **#904** - Fruit Into Baskets
 - **#1101** - The Earliest Moment When Everyone Become Friends
