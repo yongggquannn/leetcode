@@ -1,0 +1,29 @@
+def maximum_subarray_sum_size_k(nums, k):
+    sum_to_idx = {0: -1}
+
+    res = 0
+    prefix_sum = 0
+    for idx in range(len(nums)):
+        prefix_sum += nums[idx]
+        if (prefix_sum - k) in sum_to_idx:
+            res = max(res, idx - sum_to_idx[prefix_sum - k])
+        if prefix_sum not in sum_to_idx:
+            sum_to_idx[prefix_sum] = idx
+    return res
+
+nums = [1, -1, 5, -2, 3]
+k = 3
+print(maximum_subarray_sum_size_k(nums, k))
+
+
+"""
+You are given an integer array nums and an integer k. 
+Your task is to find the maximum length of a contiguous subarray whose elements sum to exactly k.
+If no such subarray exists, return 0.
+
+Example 1:
+nums = [1, -1, 5, -2, 3]
+k = 3
+Ans: 4
+
+"""
