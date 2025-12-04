@@ -1,3 +1,6 @@
+from ast import List
+
+
 class ListNode:
     def __init__(self, val=0, next=None):    
         self.val = val
@@ -32,6 +35,49 @@ def find_length(head):
         curr = curr.next
     return res
 
+# Fast and slow pointer method (Time complexity - O(n), Space complexity - O(1))
+
+def fast_and_slow(head):
+    slow, fast = head, head
+    while fast and fast.next:
+        fast = fast.next.next
+        slow = slow.next
+    return slow
+
+# Reverse LL (Time complexity - O(n), Space Complexity - O(1))
+def reverse(head):
+    prev, curr = None, head
+    while curr:
+        # Temp variable
+        temp = curr.next
+        curr.next = prev
+        prev = curr
+        curr = temp
+    return prev
+
+# Merge two linked lists together in sorted order (Time complexity - O(n + m), Space Complexity - O(1))
+
+def merge(list1, list2):
+    dummy = ListNode()
+    curr = dummy
+
+    while list1 and list2:
+        # Case 1: Curr val of list 1 node is smaller or equal to list 2 
+        if list1.val <= list2.val:
+            curr.next = list1
+            list1 = list1.next
+        # Case 2: Curr val of list 2 node is smaller or equal to list 1 
+        else:
+            curr.next = list2
+            list2 = list2.next
+
+        curr = curr.next
+    
+    curr.next = list1 or list2
+    return dummy.next
+        
+
+    pass
 
 """
 1 -> 2 -> 3 -> 4
