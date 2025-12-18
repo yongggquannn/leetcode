@@ -9,6 +9,7 @@ This repository contains solutions to various LeetCode problems implemented in P
 - **#325** - Maximum Size Subarray Sum Equals k
 - **#505** - The Maze II
 - **#904** - Fruit Into Baskets
+- **#962** - Maximum Width Ramp
 - **#1101** - The Earliest Moment When Everyone Become Friends
 - **#2215** - Find the Difference of Two Arrays
 - **Print Hierarchy** - [Google Phone Interview Question](https://leetcode.com/discuss/post/569802/google-phone-print-hierarchy-by-anonymou-jsxz/)
