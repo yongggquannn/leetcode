@@ -33,31 +33,57 @@ logs[i][1] != logs[i][2]
 
 from typing import List
     
+class UnionFind:
+
+    def __init__(self, n) -> None:
+        self.parent = [idx for idx in range(n)]
+        self.rank = [1 for _ in range(n)]
+        self.groups = n # Number of groups together
+        self.timestamp = None # Keep track of latest timestamp 
+
+    # Find method
+    def find(self, friend):
+        if friend != self.parent[friend]:
+            self.parent[friend] = self.find(self.parent[friend])
+        return self.parent[friend]
+    
+    # Union method
+    def union(self, friendP, friendQ, timestamp):
+        rootP, rootQ = self.find(friendP), self.find(friendQ)
+        if rootP != rootQ:
+            # Rank of P higher than Q
+            if self.rank[rootP] > self.rank[rootQ]:
+                self.parent[rootQ] = rootP
+            elif self.rank[rootQ] > self.rank[rootP]:
+                self.parent[rootP] = rootQ
+            else:
+                self.parent[rootQ] = rootP
+                self.rank[rootP] += 1
+            self.groups -= 1
+            # Update timestamp and number of groups
+            self.timestamp = timestamp
+    
+    def getGroups(self):
+        return self.groups
+    
+    def getLatestTime(self):
+        return self.timestamp
+
 
 def earliestMoment(logs: List[List[int]], n: int) -> int:
-    parent = list(range(n))
-    # Path compression logic using Union Find
-    def find(person):
-        if parent[person] != person:
-            parent[person] = find(parent[person])
-        return parent[person]
-    logs.sort()
-    num_of_groups = n
-    for time_stamp, x, y in logs:
-        x_parent = find(x)
-        y_parent = find(y)
+    unionFind = UnionFind(n)
 
-        # Does not require union of the two different group
-        if x_parent == y_parent:
-            continue
-        
-        # Implement union of the two diff. groups
-        parent[x_parent] = y_parent
+    # Sort logs by the timestamp
+    logs.sort(key=lambda x: x[0])
 
-        num_of_groups -= 1
-        
-        if num_of_groups == 1:
-            return time_stamp
+    for log in logs:
+        latestTime , friendX, friendY = log[0], log[1], log[2]
+        unionFind.union(friendX, friendY, latestTime)
+        print(unionFind.parent)
+
+        # Check if the number of group reaches 1
+        if unionFind.getGroups() == 1:
+            return unionFind.getLatestTime()
     
     return -1
 
@@ -69,4 +95,9 @@ print(earliestMoment(logs, n))
 """
 - Use Union Find data structure to solve the problem
 - Idea of path compression 
+
+[[20190101,0,1],[20190104,3,4],[20190107,2,3],[20190211,1,5],[20190224,2,4],[20190301,0,3],[20190312,1,2],[20190322,4,5]]
+
+
+
 """
