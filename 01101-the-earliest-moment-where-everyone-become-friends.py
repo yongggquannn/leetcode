@@ -31,27 +31,26 @@ logs[i][1] != logs[i][2]
 
 """
 
-from typing import List
     
 class UnionFind:
 
-    def __init__(self, n) -> None:
-        self.parent = [idx for idx in range(n)]
-        self.rank = [1 for _ in range(n)]
-        self.groups = n # Number of groups together
-        self.timestamp = None # Keep track of latest timestamp 
-
-    # Find method
-    def find(self, friend):
-        if friend != self.parent[friend]:
-            self.parent[friend] = self.find(self.parent[friend])
-        return self.parent[friend]
+    def __init__(self, size):
+        self.parent = [idx for idx in range(size)]
+        self.rank = [1 for _ in range(size)]
+        self.latestTimeStamp = None
+        self.numGroups = size
     
-    # Union method
-    def union(self, friendP, friendQ, timestamp):
-        rootP, rootQ = self.find(friendP), self.find(friendQ)
+    def find(self, p):
+        if self.parent[p] != p:
+            # Path compression
+            self.parent[p] = self.find(self.parent[p])
+        return self.parent[p]
+
+    def union(self, p, q, timeStamp):
+        rootP, rootQ = self.find(p), self.find(q)
+        # Belong to different group
         if rootP != rootQ:
-            # Rank of P higher than Q
+            # Rank P higher than Q
             if self.rank[rootP] > self.rank[rootQ]:
                 self.parent[rootQ] = rootP
             elif self.rank[rootQ] > self.rank[rootP]:
@@ -59,32 +58,26 @@ class UnionFind:
             else:
                 self.parent[rootQ] = rootP
                 self.rank[rootP] += 1
-            self.groups -= 1
-            # Update timestamp and number of groups
-            self.timestamp = timestamp
+            self.latestTimeStamp = timeStamp
+            self.numGroups -= 1
     
-    def getGroups(self):
-        return self.groups
-    
-    def getLatestTime(self):
-        return self.timestamp
+    def totalGroups(self):
+        return self.numGroups
 
 
-def earliestMoment(logs: List[List[int]], n: int) -> int:
-    unionFind = UnionFind(n)
 
-    # Sort logs by the timestamp
+def earliestMoment(logs, n):
+    uf = UnionFind(n)
+
+    # Sort logs in timestamp order
     logs.sort(key=lambda x: x[0])
 
-    for log in logs:
-        latestTime , friendX, friendY = log[0], log[1], log[2]
-        unionFind.union(friendX, friendY, latestTime)
-        print(unionFind.parent)
+    for timeStamp, p, q in logs:
+        uf.union(p, q, timeStamp)
 
-        # Check if the number of group reaches 1
-        if unionFind.getGroups() == 1:
-            return unionFind.getLatestTime()
-    
+        if uf.totalGroups() == 1:
+            return uf.latestTimeStamp
+            
     return -1
 
 logs = [[20190101,0,1],[20190104,3,4],[20190107,2,3],[20190211,1,5],[20190224,2,4],[20190301,0,3],[20190312,1,2],[20190322,4,5]]
@@ -97,7 +90,6 @@ print(earliestMoment(logs, n))
 - Idea of path compression 
 
 [[20190101,0,1],[20190104,3,4],[20190107,2,3],[20190211,1,5],[20190224,2,4],[20190301,0,3],[20190312,1,2],[20190322,4,5]]
-
 
 
 """
