@@ -22,5 +22,6 @@ This repository contains solutions to various DSA problems implemented in Python
 ### Interview/Custom Problems
 - **Print Hierarchy** - [Google Phone Interview Question](https://leetcode.com/discuss/post/569802/google-phone-print-hierarchy-by-anonymou-jsxz/)
 - **Max Size of Islands in Tree** - Tree traversal problem to find maximum connected component size
+- **Count Islands in Binary Tree** - Count connected components (islands) of same-valued nodes in a binary tree
 
 Each solution file is named with the problem number and title for easy identification. Codeforces problems are organized in the `cp31/` directory, while LeetCode problems are in the root directory.
