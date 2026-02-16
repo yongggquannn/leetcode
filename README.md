@@ -9,6 +9,7 @@ This repository contains solutions to various DSA problems implemented in Python
 - **#261** - Graph Valid Tree
 - **#325** - Maximum Size Subarray Sum Equals k
 - **#505** - The Maze II
+- **#755** - Pour Water
 - **#792** - Number of Matching Subsequences
 - **#904** - Fruit Into Baskets
 - **#962** - Maximum Width Ramp
