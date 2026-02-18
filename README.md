@@ -21,6 +21,7 @@ This repository contains solutions to various DSA problems implemented in Python
 - **800 Q1** - Array Sorting Check (Codeforces 800 level)
 
 ### Interview/Custom Problems
+- **Find Edges to Remove for K Components** - Given an undirected graph, find the minimum number of edges to remove to disconnect into exactly k connected components. Uses DFS, tree/cycle special cases; general case reduces to minimum k-cut (NP-hard for k ≥ 3).
 - **Print Hierarchy** - [Google Phone Interview Question](https://leetcode.com/discuss/post/569802/google-phone-print-hierarchy-by-anonymou-jsxz/)
 - **Max Size of Islands in Tree** - Tree traversal problem to find maximum connected component size
 - **Count Islands in Binary Tree** - Count connected components (islands) of same-valued nodes in a binary tree
