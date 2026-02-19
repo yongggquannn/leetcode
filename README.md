@@ -22,6 +22,7 @@ This repository contains solutions to various DSA problems implemented in Python
 
 ### Interview/Custom Problems
 - **Find Edges to Remove for K Components** - Given an undirected graph, find the minimum number of edges to remove to disconnect into exactly k connected components. Uses DFS, tree/cycle special cases; general case reduces to minimum k-cut (NP-hard for k ≥ 3).
+- **Rotation Table** - Given on-call rotation schedules (name, start, end), return a non-overlapping interval table of who is on call during each period. Uses sweep line with bisect; O(n log n + n·k) time.
 - **Print Hierarchy** - [Google Phone Interview Question](https://leetcode.com/discuss/post/569802/google-phone-print-hierarchy-by-anonymou-jsxz/)
 - **Max Size of Islands in Tree** - Tree traversal problem to find maximum connected component size
 - **Count Islands in Binary Tree** - Count connected components (islands) of same-valued nodes in a binary tree
