@@ -20,6 +20,9 @@ This repository contains solutions to various DSA problems implemented in Python
 - **2185D** - Out of Memory Error (Contest 2185, Problem D)
 - **800 Q1** - Array Sorting Check (Codeforces 800 level)
 
+### CSES Problems
+- **1623** - [Apple Division](https://cses.fi/problemset/task/1623) - Divide apples into two groups with minimal weight difference
+
 ### Interview/Custom Problems
 - **Find Edges to Remove for K Components** - Given an undirected graph, find the minimum number of edges to remove to disconnect into exactly k connected components. Uses DFS, tree/cycle special cases; general case reduces to minimum k-cut (NP-hard for k ≥ 3).
 - **Rotation Table** - Given on-call rotation schedules (name, start, end), return a non-overlapping interval table of who is on call during each period. Uses sweep line with bisect; O(n log n + n·k) time.
