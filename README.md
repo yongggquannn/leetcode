@@ -30,4 +30,7 @@ This repository contains solutions to various DSA problems implemented in Python
 - **Max Size of Islands in Tree** - Tree traversal problem to find maximum connected component size
 - **Count Islands in Binary Tree** - Count connected components (islands) of same-valued nodes in a binary tree
 
+### Sierra AI Assessment Practice
+- [`sierra/`](sierra/README.md) - 8 multi-part problems modelled on reported Sierra CoderPad questions (flaky API retries, spreadsheet cycles, agent debugging, task graphs, SQL CTEs, cancellation flow), with tests and reference solutions. Run `python sierra/run.py <n>`.
+
 Each solution file is named with the problem number and title for easy identification. Codeforces problems are organized in the `cp31/` directory, while LeetCode problems are in the root directory.
