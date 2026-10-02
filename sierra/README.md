@@ -20,6 +20,7 @@ as you go.
 | 6 | [problem_6_task_graph.py](problem_6_task_graph.py) | Reported pattern: graph traversal, cycle detection | Kahn, critical path, k-worker scheduling | 50m |
 | 7 | [problem_7_reporting_sql.py](problem_7_reporting_sql.py) | Reported: "Simplify reporting queries with CTEs" | CTEs, window functions, parameterised SQL | 40m |
 | 8 | [problem_8_cancellation_flow.py](problem_8_cancellation_flow.py) | Reported: subscription-cancellation agent | state machine, guardrails, audit, resume | 50m |
+| 9 | [problem_9_conversation_history.py](problem_9_conversation_history.py) | Retrieve and compact chat-agent history in three stages | cursor pagination, token budgets, unique-result limits | 45m |
 
 Highest priority: **1, 2, 5**. They match the reported screen format most closely.
 

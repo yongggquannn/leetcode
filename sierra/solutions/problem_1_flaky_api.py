@@ -35,35 +35,22 @@ def call_with_retry(
     raise RetryExhaustedError(max_attempts) from last_err
 
 
-def resolve_catalog(api: FakeProductAPI, *, sleep: Callable[[float], None] = time.sleep) -> ResolveResult:
-    listings = call_with_retry(api.list_products, sleep=sleep)
-    cache: dict[str, dict | None] = {}
+def resolve_catalog(products: list[dict]) -> list[dict]:
+    """Add fallback-chain product IDs and omit out-of-stock products."""
+    products_by_sku = {product["sku"]: product for product in products}
 
-    def fetch(pid: str) -> dict | None:
-        if pid not in cache:
-            try:
-                cache[pid] = call_with_retry(lambda: api.get_product(pid), sleep=sleep)
-            except (ProductNotFound, RetryExhaustedError):
-                cache[pid] = None
-        return cache[pid]
+    def collect_related(sku: str | None, visited: set[str]) -> list[Any]:
+        if sku is None or sku in visited or sku not in products_by_sku:
+            return []
 
-    def follow(pid: str) -> dict | None:
-        seen: set[str] = set()
-        while pid not in seen:
-            seen.add(pid)
-            doc = fetch(pid)
-            if doc is None or "moved_to" not in doc:
-                return doc
-            pid = doc["moved_to"]
-        return None  # redirect cycle
+        visited.add(sku)
+        product = products_by_sku[sku]
+        return [product["id"], *collect_related(product.get("fallbackSku"), visited)]
 
-    result = ResolveResult()
-    for listing in listings:
-        for candidate in [listing["id"], *listing.get("fallback_ids", [])]:
-            product = follow(candidate)
-            if product is not None:
-                result.products.append(product)
-                break
-        else:
-            result.unresolved.append(listing["id"])
-    return result
+    resolved = []
+    for product in products:
+        related_items = collect_related(product.get("fallbackSku"), {product["sku"]})
+        if product.get("inStock", True):
+            resolved.append({**product, "relatedItems": related_items})
+
+    return resolved

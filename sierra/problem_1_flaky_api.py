@@ -1,16 +1,14 @@
 """
-Flaky API + Product Resolution (Sierra)
-Reported: Sierra SWE technical screen on CoderPad - "call an API endpoint that
-fails occasionally but eventually succeeds ... the response contains a product
-list with fallback IDs ... resolve each product's eventual set of IDs into the
-product objects."
+Flaky API Retries + Catalogue Suggestions (Sierra)
+Reported as a Sierra SWE technical screen on CoderPad. The exercises cover
+retrying an unreliable product API and resolving product suggestion chains.
 Source: https://gaijineer.co/sierra-software-engineer-agent-interview-experience
 
 Suggested time: 45 min.    Run: python sierra/run.py 1
 
 ================================================================================
 GIVEN (do not edit): TransientError, PermanentError, ProductNotFound,
-RetryExhaustedError, ResolveResult, FakeProductAPI
+RetryExhaustedError
 ================================================================================
 
 ================================================================================
@@ -30,42 +28,20 @@ Example: fn fails twice then returns 42, base_delay=0.1
     -> sleeps [0.1, 0.2], returns 42
 
 ================================================================================
-PART 2: Don't retry what can't succeed
+PART 2: Resolve product suggestions
 ================================================================================
 
-- PermanentError (including ProductNotFound) propagates immediately: no sleep.
-- Any other exception (a bug, e.g. KeyError) also propagates immediately.
-- max_attempts < 1 -> ValueError.
+resolve_catalog(products) -> list[dict]
 
-================================================================================
-PART 3: Resolve the catalog
-================================================================================
-
-api.list_products() -> [{"id": "p1", "fallback_ids": ["p9", "p3"]}, ...]
-api.get_product(pid) -> {"id": ..., "name": ..., "price_cents": ...}
-Both may raise TransientError; get_product may raise ProductNotFound.
-
-resolve_catalog(api, *, sleep=time.sleep) -> ResolveResult
-
-- Wrap every API call in call_with_retry (pass `sleep` through).
-- For each listing, try its id, then its fallback_ids in order. The first
-  product found resolves the listing.
-- A candidate whose retries are exhausted counts as "not found" - move to the
-  next fallback. One bad product must not fail the whole catalog.
-- Listings where nothing resolves go in ResolveResult.unresolved (listing ids).
-- Both lists keep catalog order. If list_products itself is exhausted, raise.
-
-================================================================================
-PART 4: Redirects + caching
-================================================================================
-
-get_product may now return {"id": "p1", "moved_to": "p7"} instead of a product.
-
-- Follow moved_to until a real product is reached.
-- A redirect cycle (p1 -> p7 -> p1) makes that candidate unresolvable; move on
-  to the next fallback.
-- Fetch each product id from the API at most once per resolve_catalog call
-  (listings share fallbacks). Remember misses too.
+- Each product has an `id`, a unique `sku`, and an `inStock` boolean.
+- `fallbackSku`, when present, names another product's SKU.
+- Add `relatedItems` to each returned product: IDs of every product reached by
+  following its fallbackSku chain, in order. Do not include the starting
+  product if a cycle leads back to it.
+- Stop safely on missing SKUs and circular references.
+- Return only products whose `inStock` value is true. Out-of-stock products
+  can still be followed as links while resolving another product's chain.
+- Products without a fallback get `relatedItems: []`.
 
 ================================================================================
 FOLLOW-UPS (answer out loud / in the video)
@@ -76,6 +52,39 @@ FOLLOW-UPS (answer out loud / in the video)
 - API fully down: circuit breaker instead of retrying every call.
 - Is retrying safe here? What changes for a non-idempotent POST?
 - What would you log / measure (attempts, exhaustions, latency per id)?
+
+================================================================================
+EXAMPLE REFERENCE
+================================================================================
+
+Part 1 - retries (max_attempts=4, base_delay=0.1)
+
+    fn:      error, error, 42      -> result 42; sleeps [0.1, 0.2]
+    fn:      error on all calls    -> RetryExhaustedError; sleeps [0.1, 0.2, 0.4]
+    fn:      PermanentError         -> raised immediately; no sleep
+
+Part 2 - related items and cycles
+
+    Input:
+        {"id": 1, "sku": "A", "fallbackSku": "B", "inStock": True}
+        {"id": 2, "sku": "B", "fallbackSku": "C", "inStock": True}
+        {"id": 3, "sku": "C", "inStock": False}
+        {"id": 4, "sku": "D", "fallbackSku": "E", "inStock": True}
+        {"id": 5, "sku": "E", "fallbackSku": "D", "inStock": True}
+
+    Returned products:
+        {"id": 1, "sku": "A", "fallbackSku": "B", "inStock": True,
+         "relatedItems": [2, 3]}
+        {"id": 2, "sku": "B", "fallbackSku": "C", "inStock": True,
+         "relatedItems": [3]}
+        {"id": 4, "sku": "D", "fallbackSku": "E", "inStock": True,
+         "relatedItems": [5]}
+        {"id": 5, "sku": "E", "fallbackSku": "D", "inStock": True,
+         "relatedItems": [4]}
+
+    Product 3 is excluded from the returned catalog because it is out of
+    stock. D -> E -> D is a cycle; traversal stops before revisiting the
+    starting product. A product with no fallback gets relatedItems=[].
 """
 from __future__ import annotations
 
@@ -84,6 +93,7 @@ import time
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Callable
+import random
 
 
 # ---------------------------------------------------------------- GIVEN
@@ -145,10 +155,123 @@ def call_with_retry(
     max_attempts: int = 4,
     base_delay: float = 0.1,
     max_delay: float = 1.0,
-    sleep: Callable[[float], None] = time.sleep,
 ) -> Any:
-    raise NotImplementedError
+    # Check for curr num of attempts
+    if max_attempts < 1:
+        raise ValueError('Attempts cannot be zero')
+
+    for attempt in range(1, max_attempts + 1):
+        # Call the function
+        try:
+            return fn()
+        # Handle timeout errors
+        except TransientError:
+            if attempt < max_attempts:
+                # Start off with base delay and constantly * 2
+                exponential_delay = base_delay * (2 ** (attempt - 1)) 
+                delay_cap = min(max_delay, exponential_delay)
+                delay = random.uniform(0, delay_cap)
+                time.sleep(delay)
+
+    # Reach max attempts, raise retry exhausted error
+    raise RetryExhaustedError(max_attempts)
 
 
-def resolve_catalog(api: FakeProductAPI, *, sleep: Callable[[float], None] = time.sleep) -> ResolveResult:
-    raise NotImplementedError
+def resolve_catalog(products: list[dict]) -> list[dict]:
+    # """Add fallback-chain product IDs and omit out-of-stock products."""
+    # sku_to_product = {
+    #     product['sku']: product for product in products
+    # }
+
+    # res = []
+
+    # def dfs(curr_sku, visited):
+    #     if curr_sku is None or curr_sku in visited:
+    #         return []
+
+    #     curr_product = sku_to_product[curr_sku]
+    #     if curr_product is None:
+    #         return []
+    #     visited.add(curr_sku)
+
+    #     product_id = product['id']
+    #     next_sku = product['fallbackSku']
+    #     next_related_ids = dfs(next_sku, visited)
+    #     return [product_id, *next_related_ids]
+
+    # for product in products:
+    #     if product['inStock'] == True:
+    #         initial_sku = product['sku'] #A
+    #         first_fallback_sku = product['fallbackSku'] #B
+    
+    #         visited = set({initial_sku})
+    #         related_item_ids = dfs(first_fallback_sku, visited)
+            
+    #         resolved_product = {
+    #             **product,
+    #             'relatedItems': related_item_ids,
+    #         }
+    #         res.append(resolved_product)
+
+    # return res
+
+
+"""
+Part 1:
+- Exponential backoff with jitter
+
+Part 2:
+    products = [
+        {"id": 1, "sku": "A",
+        "fallbackSku": "B", "inStock":
+        True},
+        {"id": 2, "sku": "B",
+        "fallbackSku": "C", "inStock":
+        True},
+        {"id": 3, "sku": "C", "inStock":
+        True},
+        {"id": 4, "sku": "D",
+        "fallbackSku": "E", "inStock":
+        True},
+        {"id": 5, "sku": "E",
+        "fallbackSku": "D", "inStock":
+        True},
+        {"id": 6, "sku": "F",
+        "fallbackSku": "C", "inStock":
+        False},
+    ]
+
+    Output: 
+    [
+          {
+              "id": 1, "sku": "A",
+              "fallbackSku": "B", "inStock":
+              True,
+              "relatedItems": [2, 3],
+          },
+          {
+              "id": 2, "sku": "B",
+              "fallbackSku": "C", "inStock":
+              True,
+              "relatedItems": [3],
+          },
+          {
+              "id": 3, "sku": "C",
+              "inStock": True,
+              "relatedItems": [],
+          },
+          {
+              "id": 4, "sku": "D",
+              "fallbackSku": "E", "inStock":
+              True,
+              "relatedItems": [5],
+          },
+          {
+              "id": 5, "sku": "E",
+              "fallbackSku": "D", "inStock":
+              True,
+              "relatedItems": [4],
+          },
+      ]
+
+"""
